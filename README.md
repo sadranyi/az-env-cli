@@ -4,6 +4,7 @@
 [![coverage](https://img.shields.io/codecov/c/github/sadranyi/az-env-cli)](https://codecov.io/gh/sadranyi/az-env-cli)
 [![npm](https://img.shields.io/npm/v/az-env-cli.svg)](https://www.npmjs.com/package/az-env-cli)
 [![downloads](https://img.shields.io/npm/dm/az-env-cli.svg)](https://www.npmjs.com/package/az-env-cli)
+[![CodeRabbit](https://img.shields.io/coderabbit/prs/github/sadranyi/az-env-cli?label=CodeRabbit%20Reviews&labelColor=171717&color=FF570A)](https://coderabbit.ai)
 
 Convert `.env` files into Azure App Service / Function App settings JSON, with
 proper Key Vault references and (coming next release) direct-apply.

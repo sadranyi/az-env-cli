@@ -18,7 +18,8 @@
     "dev": "tsx src/cli.ts",
     "prepublishOnly": "npm run build && npm test",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "engines": {
     "node": ">=18"

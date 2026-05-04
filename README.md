@@ -1,9 +1,11 @@
 # az-env-cli
 
+[![CI](https://github.com/sadranyi/az-env-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/sadranyi/az-env-cli/actions/workflows/ci.yml)
+
 Convert `.env` files into Azure App Service / Function App settings JSON, with
 proper Key Vault references and (coming next release) direct-apply.
 
-```
+```text
    _   ____   _____ _   ___     __  ____ _     ___
   / \ |_  /  | ____| \ | \ \   / / / ___| |   |_ _|
  / _ \ /  /  |  _| |  \| |\ \ / / | |   | |    | |
@@ -52,10 +54,10 @@ az-env export -o appsettings.json
 Inline trailing comments on `KEY=VALUE` lines control how each variable is
 emitted. Markers compose freely.
 
-| Marker                              | Effect                                                          |
-| ----------------------------------- | --------------------------------------------------------------- |
-| `# @slot`                           | Sets `slotSetting: true` (sticks to deployment slot)            |
-| `# @secret`                         | Replaces value with a Key Vault reference using config defaults |
+| Marker                                | Effect                                                          |
+| ------------------------------------- | --------------------------------------------------------------- |
+| `# @slot`                             | Sets `slotSetting: true` (sticks to deployment slot)            |
+| `# @secret`                           | Replaces value with a Key Vault reference using config defaults |
 | `# @secret(vault=v,name=SECRET-NAME)` | Explicit per-variable Key Vault override                        |
 
 Default secret name is the env var name with underscores replaced by hyphens

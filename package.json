@@ -4,7 +4,7 @@
   "description": "Convert .env files to Azure App Service settings JSON, with Key Vault references and direct-apply support.",
   "type": "module",
   "bin": {
-    "az-env": "./dist/cli.js"
+    "az-env": "dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

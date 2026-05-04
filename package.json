@@ -1,0 +1,54 @@
+{
+  "name": "az-env-cli",
+  "version": "0.1.0",
+  "description": "Convert .env files to Azure App Service settings JSON, with Key Vault references and direct-apply support.",
+  "type": "module",
+  "bin": {
+    "az-env": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/cli.ts",
+    "prepublishOnly": "npm run build && npm test",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "azure",
+    "env",
+    "dotenv",
+    "key-vault",
+    "app-service",
+    "function-app",
+    "cli"
+  ],
+  "author": "Samuel Adranyi",
+  "license": "ISC",
+  "dependencies": {
+    "@inquirer/prompts": "^7.2.0",
+    "chalk": "^5.3.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "figlet": "^1.8.0",
+    "gradient-string": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/figlet": "^1.7.0",
+    "@types/gradient-string": "^1.1.6",
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.0",
+    "@vitest/coverage-v8": "^2.1.0"
+  }
+}

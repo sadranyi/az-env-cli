@@ -1,0 +1,12 @@
+node_modules
+dist
+*.log
+.env
+.env.*
+!.env.example
+.azenv.lock
+.DS_Store
+
+# Claude Code local state
+.claude/
+

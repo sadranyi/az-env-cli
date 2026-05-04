@@ -10,6 +10,9 @@ dist
 # Local npm pack output
 *.tgz
 
+# Vitest coverage reports
+coverage/
+
 # Claude Code local state
 .claude/
 

@@ -7,6 +7,9 @@ dist
 .azenv.lock
 .DS_Store
 
+# Local npm pack output
+*.tgz
+
 # Claude Code local state
 .claude/
 

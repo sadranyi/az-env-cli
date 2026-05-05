@@ -58,7 +58,7 @@ function renderValue(entry: DiffEntry): string {
   return chalk.dim(entry.localValue ?? entry.azureValue ?? '');
 }
 
-function renderSticky(entry: DiffEntry): string {
+export function renderSticky(entry: DiffEntry): string {
   if (entry.kind === 'removed') {
     return entry.azureSticky ? chalk.dim('(sticky)') : chalk.dim('-');
   }

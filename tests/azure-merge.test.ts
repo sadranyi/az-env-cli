@@ -126,6 +126,34 @@ describe('resolveApply (replace)', () => {
     expect(r.slotConfigNames).toEqual(['A']);
   });
 
+  it('preserves slot stickiness for reserved settings carried over', () => {
+    // Regression: previously slotConfigNames was just localSticky, which
+    // silently dropped Azure-side stickiness for preserved reserved names.
+    const r = resolveApply(
+      'replace',
+      [setting({ name: 'A', value: '1', slotSetting: true })],
+      state({
+        appSettings: { A: 'old', AzureWebJobsStorage: 'connstr' },
+        slotConfigNames: ['AzureWebJobsStorage'],
+      }),
+    );
+    expect(r.preservedReserved).toContain('AzureWebJobsStorage');
+    expect(r.slotConfigNames).toContain('A');
+    expect(r.slotConfigNames).toContain('AzureWebJobsStorage');
+  });
+
+  it('does not duplicate sticky entries when reserved is also locally sticky', () => {
+    const r = resolveApply(
+      'replace',
+      [setting({ name: 'AzureWebJobsStorage', value: 'overridden', slotSetting: true })],
+      state({
+        appSettings: { AzureWebJobsStorage: 'old' },
+        slotConfigNames: ['AzureWebJobsStorage'],
+      }),
+    );
+    expect(r.slotConfigNames.filter((n) => n === 'AzureWebJobsStorage')).toHaveLength(1);
+  });
+
   it('local overrides reserved with same name', () => {
     const r = resolveApply(
       'replace',

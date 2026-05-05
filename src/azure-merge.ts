@@ -67,9 +67,17 @@ export function resolveApply(
     }
   }
 
+  // Include sticky flags from preserved reserved settings
+  const stickyWithPreserved = [...localSticky];
+  for (const name of preservedReserved) {
+    if (azure.slotConfigNames.includes(name) && !stickyWithPreserved.includes(name)) {
+      stickyWithPreserved.push(name);
+    }
+  }
+
   return {
     settings,
-    slotConfigNames: localSticky,
+    slotConfigNames: stickyWithPreserved,
     deletedNames,
     preservedReserved,
   };

@@ -7,7 +7,8 @@
 [![CodeRabbit](https://img.shields.io/coderabbit/prs/github/sadranyi/az-env-cli?label=CodeRabbit%20Reviews&labelColor=171717&color=FF570A)](https://coderabbit.ai)
 
 Convert `.env` files into Azure App Service / Function App settings JSON, with
-proper Key Vault references and (coming next release) direct-apply.
+proper Key Vault references — and apply them straight to your running app via
+`push` / `diff` against the live state.
 
 ```text
    _   ____   _____ _   ___     __  ____ _     ___
@@ -49,8 +50,14 @@ cat .env
 # CLIENT_ID=abc-123                           # @slot
 # CLIENT_SECRET=changeme                      # @secret @slot
 
-# 3. Generate the Azure JSON
+# 3. Either generate JSON for the Azure CLI...
 az-env export -o appsettings.json
+az webapp config appsettings set --settings @appsettings.json --resource-group rg-prod --name my-app
+
+# 3b. ...or apply directly with diff-then-confirm
+az login
+az-env diff --app my-app --resource-group rg-prod --subscription <sub-id>
+az-env push --app my-app --resource-group rg-prod --subscription <sub-id> --mode merge
 ```
 
 ## Marker syntax
@@ -103,8 +110,19 @@ az-env export [envFile]              Convert .env → Azure JSON
   -o, --out <file>                    Write JSON to file (default: stdout)
   -y, --yes                           Skip preview confirmation
   --vault <name>                      Override default vault
-az-env push   [envFile]              [coming next release]
-az-env diff   [envFile]              [coming next release]
+az-env diff   [envFile]              Compare local .env vs Azure (CI-friendly)
+  --app <name>                        Required (or via config)
+  --slot <slot>                       Default: production
+  --resource-group <rg>               Required
+  --subscription <sub>                Required
+  --vault <name>                      Default vault for @secret entries
+                                      Exit codes: 0=clean, 1=drift, 2=error
+az-env push   [envFile]              Apply settings to App Service / Function App
+  --mode <merge|replace>              Default: merge
+  --app, --slot, --resource-group, --subscription, --vault   (same as diff)
+  --no-preserve-reserved              Replace mode: also delete WEBSITE_*/FUNCTIONS_*/...
+  --dry-run                           Show diff without applying
+  -y, --yes                           Skip confirmation
 ```
 
 ## Configuration
@@ -130,6 +148,43 @@ Recognized keys:
 
 CLI flags always win over config.
 
+## Pushing to Azure
+
+`push` reads your `.env`, fetches the current Azure App Service state, shows a
+diff, and applies changes after confirmation. Authentication uses
+[`DefaultAzureCredential`](https://learn.microsoft.com/azure/developer/javascript/sdk/credential-chains)
+— `az login` is the simplest path; managed identity, environment variables, and
+VS Code credentials are also picked up automatically.
+
+```bash
+# Diff first (CI-friendly: exits 1 on drift)
+az-env diff --app my-app --resource-group rg-prod --subscription <sub-id>
+
+# Apply with merge (default): local overlays Azure, Azure-only settings preserved
+az-env push --app my-app --resource-group rg-prod --subscription <sub-id>
+
+# Apply with replace: Azure-only settings deleted (reserved settings preserved by default)
+az-env push --mode replace --app my-app --resource-group rg-prod --subscription <sub-id>
+
+# Same, but also delete reserved settings (WEBSITE_*, FUNCTIONS_*, etc.)
+az-env push --mode replace --no-preserve-reserved --app my-app -y ...
+
+# Preview only, no apply
+az-env push --dry-run ...
+```
+
+Reserved Azure-managed settings (`WEBSITE_*`, `FUNCTIONS_*`, `APPINSIGHTS_*`,
+`APPLICATIONINSIGHTS_*`, `AzureWebJobsStorage`) are preserved by default in
+replace mode — opt out with `--no-preserve-reserved`.
+
+`push` re-fetches Azure state right before applying and re-prompts if it
+changed since the diff (basic optimistic concurrency). Slot-stickiness updates
+are applied **before** settings, so a mid-flight failure leaves names sticky
+but absent — benign on the next push.
+
+`push` and `diff` only manage app settings — connection strings (a separate
+Azure concept) are not handled in v0.2.
+
 ## Use as a library
 
 ```ts
@@ -142,9 +197,11 @@ const settings = toAzureSettings(entries, (e) => ({
 }));
 ```
 
-Public exports: `parseEnvFile`, `parseEnvContent`, `toAzureSettings`,
-`buildKeyVaultRef`, `defaultSecretName`, `loadConfig`, `readScope`,
-`writeScope`, `setKey`, `getKey`, `configPath`.
+Public exports include `parseEnvFile`, `toAzureSettings`, `buildKeyVaultRef`,
+`defaultSecretName`, `loadConfig` / `setKey` / `getKey`, `buildSecretResolver`,
+`createAzureClient`, `diffSettings`, `resolveApply`, `isReservedName`, plus
+type exports for `AzureTarget`, `AppState`, `AzureClient`, `SettingsDiff`,
+`DiffEntry`, `ApplyMode`, and `ResolvedApply`.
 
 ## Roadmap
 
@@ -152,10 +209,12 @@ Public exports: `parseEnvFile`, `parseEnvContent`, `toAzureSettings`,
 - [x] Inline `@secret` / `@slot` / `@secret(vault=,name=)` markers
 - [x] Git-style 3-tier config
 - [x] Key Vault reference generation
-- [ ] `push` — apply directly via `@azure/arm-appservice` with `--mode merge|replace`
-- [ ] `diff` — compare local `.env` vs current Azure settings
-- [ ] App Service + Function App support
-- [ ] `DefaultAzureCredential` auth (az CLI / managed identity / env vars)
+- [x] `push` — apply directly via `@azure/arm-appservice` with `--mode merge|replace`
+- [x] `diff` — compare local `.env` vs current Azure settings (CI-friendly exit codes)
+- [x] App Service + Function App support
+- [x] `DefaultAzureCredential` auth (az CLI / managed identity / env vars)
+- [ ] `pull` — write a `.env` skeleton from current Azure settings
+- [ ] Connection strings (separate Azure concept, separate API)
 
 ## License
 

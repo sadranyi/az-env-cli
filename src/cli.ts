@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name('az-env')
   .description('.env → Azure App Service settings, with Key Vault references and direct-apply.')
-  .version('0.1.0')
+  .version('0.2.0')
   .hook('preAction', () => {
     if (process.stdout.isTTY && !process.env.AZ_ENV_NO_BANNER) {
       renderBanner();

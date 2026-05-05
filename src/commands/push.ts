@@ -81,10 +81,12 @@ export async function runPush(
 
   const interactive = process.stdout.isTTY;
 
-  // Fail fast in non-interactive environments without --yes
-  if (!opts.yes && !interactive) {
+  // Fail fast in non-interactive environments without --yes — but allow
+  // --dry-run, which never mutates and is the natural CI use case for
+  // previewing what would change.
+  if (!opts.yes && !interactive && !opts.dryRun) {
     throw new Error(
-      'Cannot proceed without confirmation in non-interactive environment. Use --yes to skip confirmation.'
+      'Refusing to apply changes in a non-interactive environment without --yes. Pass -y/--yes (or --dry-run for a read-only preview).',
     );
   }
 

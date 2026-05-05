@@ -210,6 +210,32 @@ describe('runPush', () => {
     ).rejects.toThrow(/--mode must be/);
   });
 
+  it('refuses to apply in non-interactive without --yes (real CI safety)', async () => {
+    // Regression: confirms --yes is required for apply in non-TTY contexts.
+    writeFileSync(envPath, 'A=1\n');
+    const fake = createFake({
+      initialState: { appSettings: {}, slotConfigNames: [], kind: 'app' },
+    }) as ReturnType<typeof createFake> & { factory: AzureClientFactory };
+
+    await expect(
+      runPush(envPath, { ...baseOpts, yes: false }, fake.factory),
+    ).rejects.toThrow(/non-interactive environment/i);
+  });
+
+  it('--dry-run bypasses the non-interactive guard (CI-friendly preview)', async () => {
+    // Regression: previously the guard blocked --dry-run too, which broke
+    // the natural CI use case of "show me what would change".
+    writeFileSync(envPath, 'A=1\n');
+    const fake = createFake({
+      initialState: { appSettings: {}, slotConfigNames: [], kind: 'app' },
+    }) as ReturnType<typeof createFake> & { factory: AzureClientFactory };
+
+    await expect(
+      runPush(envPath, { ...baseOpts, yes: false, dryRun: true }, fake.factory),
+    ).resolves.toBeUndefined();
+    expect(fake.calls.find((c) => c.method === 'applySettings')).toBeUndefined();
+  });
+
   it('propagates Azure SDK errors (auth failure et al)', async () => {
     writeFileSync(envPath, 'A=1\n');
     const authErr = new Error('DefaultAzureCredential failed to retrieve a token');

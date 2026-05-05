@@ -66,8 +66,10 @@ function renderSticky(entry: DiffEntry): string {
   if (!entry.stickyChanged) {
     return entry.localSticky ? chalk.yellow(local) : chalk.dim(local);
   }
-  const arrow = entry.azureSticky ? 'no→yes' : 'yes→no';
-  return chalk.yellow(arrow.replace('no', entry.localSticky ? 'yes' : 'no'));
+  const old = entry.azureSticky ? 'yes' : 'no';
+  const newValue = entry.localSticky ? 'yes' : 'no';
+  const arrow = `${old}→${newValue}`;
+  return chalk.yellow(arrow);
 }
 
 export function previewDiff(diff: SettingsDiff): void {

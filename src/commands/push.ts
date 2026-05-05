@@ -79,6 +79,15 @@ export async function runPush(
   const target = resolveTarget(opts, cfg);
   const defaultVault = opts.vault ?? getKey('vault.name', cfg);
 
+  const interactive = process.stdout.isTTY;
+
+  // Fail fast in non-interactive environments without --yes
+  if (!opts.yes && !interactive) {
+    throw new Error(
+      'Cannot proceed without confirmation in non-interactive environment. Use --yes to skip confirmation.'
+    );
+  }
+
   const resolveSecret = await buildSecretResolver(entries, {
     defaultVault,
     noPrompt: !!opts.yes,
@@ -117,7 +126,7 @@ export async function runPush(
 
   printSafetySummary(mode, resolved);
 
-  if (!opts.yes && process.stdout.isTTY) {
+  if (!opts.yes && interactive) {
     const ok = await confirm({
       message: `Apply with --mode ${mode}?`,
       default: false,
@@ -146,7 +155,7 @@ export async function runPush(
       preserveReserved: opts.preserveReserved,
     });
     printSafetySummary(mode, resolved);
-    if (!opts.yes && process.stdout.isTTY) {
+    if (!opts.yes && interactive) {
       const ok = await confirm({
         message: 'Apply against the new Azure state?',
         default: false,

@@ -2,11 +2,12 @@ import { Command } from 'commander';
 import { writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import chalk from 'chalk';
-import { confirm, input } from '@inquirer/prompts';
-import { parseEnvFile, ParsedEntry } from '../env-parser.js';
-import { toAzureSettings, defaultSecretName, SecretResolver, SecretRef } from '../azure-export.js';
+import { confirm } from '@inquirer/prompts';
+import { parseEnvFile } from '../env-parser.js';
+import { toAzureSettings } from '../azure-export.js';
 import { previewSettings } from '../preview.js';
 import { loadConfig, getKey } from '../config.js';
+import { buildSecretResolver } from '../secret-resolver.js';
 
 interface ExportOpts {
   out?: string;
@@ -38,7 +39,10 @@ export function registerExport(program: Command): void {
       const cfg = loadConfig();
       const defaultVault = opts.vault ?? getKey('vault.name', cfg);
 
-      const resolveSecret = await buildSecretResolver(entries, defaultVault, !!opts.yes);
+      const resolveSecret = await buildSecretResolver(entries, {
+        defaultVault,
+        noPrompt: !!opts.yes,
+      });
       const settings = toAzureSettings(entries, resolveSecret);
 
       console.log(chalk.bold('\nPreview:'));
@@ -63,36 +67,3 @@ export function registerExport(program: Command): void {
     });
 }
 
-async function buildSecretResolver(
-  entries: ParsedEntry[],
-  defaultVault: string | undefined,
-  noPrompt: boolean,
-): Promise<SecretResolver> {
-  const cache = new Map<string, SecretRef>();
-
-  for (const e of entries) {
-    if (!e.isSecret) continue;
-
-    let vault = e.vaultRef?.vault ?? defaultVault;
-    const secretName = e.vaultRef?.secretName ?? defaultSecretName(e.name);
-
-    if (!vault) {
-      if (noPrompt || !process.stdout.isTTY) {
-        throw new Error(
-          `No vault for secret ${e.name}. Set 'vault.name' in config, pass --vault, or use @secret(vault=...,name=...).`,
-        );
-      }
-      vault = await input({
-        message: `Vault name for secret ${chalk.cyan(e.name)}:`,
-        validate: (v: string) => v.trim().length > 0 || 'required',
-      });
-    }
-    cache.set(e.name, { vault, secretName });
-  }
-
-  return (e: ParsedEntry) => {
-    const ref = cache.get(e.name);
-    if (!ref) throw new Error(`Secret resolver missing for ${e.name}`);
-    return ref;
-  };
-}

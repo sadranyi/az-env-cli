@@ -7,7 +7,16 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      exclude: ['src/cli.ts', 'src/banner.ts', 'src/commands/**', 'src/index.ts'],
+      exclude: [
+        'src/cli.ts',
+        'src/banner.ts',
+        'src/index.ts',
+        'src/azure-client.ts',
+        'src/commands/init.ts',
+        'src/commands/config.ts',
+        'src/commands/export.ts',
+        'src/commands/diff.ts',
+      ],
     },
   },
 });
